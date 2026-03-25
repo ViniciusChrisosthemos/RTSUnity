@@ -107,7 +107,7 @@ public class UnitController : MonoBehaviour, ITarget, IPointerClickHandler
         if (!IsAlive()) return;
 
         Debug.Log("On Pointer Click");
-        UnitManager.Instance.SelectUnit(this);
+
     }
 
     public void SelectTarget()

@@ -1,11 +1,27 @@
 using UnityEngine;
 
-[RequireComponent(typeof(UnitMovementController), typeof(UnitAnimationController))]
-public class PlayerUnitController : MonoBehaviour
+[RequireComponent(typeof(UnitMovementController), typeof(UnitAnimationController), typeof(UnitSelectionView))]
+public class PlayerUnitController : MonoBehaviour, IInteractableUnit
 {
     private UnitStats m_unitStats;
     private UnitMovementController m_movementController;
     private UnitAnimationController m_animationController;
+    private UnitSelectionView m_selectionView;
+
+    public void Deselect()
+    {
+        m_selectionView.Deselect();
+    }
+
+    public void MoveTo(Vector3 position)
+    {
+        m_movementController.MoveTo(position);
+    }
+
+    public void Select()
+    {
+        m_selectionView.Select();
+    }
 
     public void Setup(UnitStats unitStat)
     {
