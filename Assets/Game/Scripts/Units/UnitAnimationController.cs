@@ -1,27 +1,47 @@
 using UnityEngine;
 
+[RequireComponent(typeof(Animator))]
 public class UnitAnimationController : MonoBehaviour
 {
-    [Header("References")]
-    [SerializeField] private Animator m_animator;
-
     [Header("Animations Triggers")]
     [SerializeField] private string m_triggerMoving;
     [SerializeField] private string m_triggerlAttacking;
     [SerializeField] private string m_triggerIdle;
 
+    private Animator m_animator;
+
+    private void Awake()
+    {
+        m_animator = GetComponent<Animator>();
+    }
+
     public void PlayIdleAnimation()
     {
-        m_animator.SetTrigger(m_triggerIdle);
+        SetAllBoolsToFalse();
+        m_animator.SetBool(m_triggerIdle, true);
+
     }
 
     public void PlayMovingAnimation()
     {
-        m_animator.SetTrigger(m_triggerMoving);
+        SetAllBoolsToFalse();
+        m_animator.SetBool(m_triggerMoving, true);
     }
 
     public void PlayAttackingAnimation()
     {
-        m_animator.SetTrigger(m_triggerIdle);
+        SetAllBoolsToFalse();
+        m_animator.SetBool(m_triggerIdle, true);
+    }
+
+    public void SetAllBoolsToFalse()
+    {
+        foreach(var paramter in m_animator.parameters)
+        {
+            if (paramter.type == AnimatorControllerParameterType.Bool)
+            {
+                m_animator.SetBool(paramter.name, false);
+            }
+        }
     }
 }

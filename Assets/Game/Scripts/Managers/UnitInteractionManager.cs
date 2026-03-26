@@ -1,5 +1,6 @@
 using NUnit.Framework;
 using System.Collections.Generic;
+using UnityEditor.PackageManager;
 using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.InputSystem;
@@ -21,6 +22,12 @@ public class UnitInteractionManager : Singleton<UnitInteractionManager>
 
     private List<IInteractableUnit> m_currentSelection = new();
 
+    private Vector3 m_selectionCenter = Vector3.zero;
+    private float m_selectionDistance = 0f;
+
+    public Transform p1;
+    public Transform p2;
+
     private void Start()
     {
         InputManager.Instance.OnInputReceived += HandleInputReceived;
@@ -31,6 +38,12 @@ public class UnitInteractionManager : Singleton<UnitInteractionManager>
         if (m_selectionBoxIsActive)
         {
             var mousePosition = InputManager.Instance.MousePosition;
+
+
+            if (Physics.Raycast(m_mainCamera.ScreenPointToRay(mousePosition), out RaycastHit hitInfo, 1000, m_floorLayer))
+            {
+                p2.position = hitInfo.point;
+            }
 
             OnSelectionBoxChanged?.Invoke(m_selectionBoxStartPosition, mousePosition);
         }
@@ -51,35 +64,54 @@ public class UnitInteractionManager : Singleton<UnitInteractionManager>
     {
         m_selectionBoxStartPosition = mousePosition;
 
+        if (Physics.Raycast(m_mainCamera.ScreenPointToRay(mousePosition), out RaycastHit hitInfo, 1000, m_floorLayer))
+        {
+            p1.position = hitInfo.point;
+        }
+
         m_selectionBoxIsActive = true;
     }
+
+    public List<RectTransform> uiPoints;
 
     private void HandleLeftClickReleased(Vector2 mousePosition)
     {
         m_currentSelection.ForEach(interactable => interactable.Deselect());
         m_currentSelection.Clear();
 
+
         if (Vector3.Distance(m_selectionBoxStartPosition, mousePosition) >= 0.1)
         {
-            Ray startRay = m_mainCamera.ScreenPointToRay(mousePosition);
+            Ray startRay = m_mainCamera.ScreenPointToRay(m_selectionBoxStartPosition);
             Ray endRay = m_mainCamera.ScreenPointToRay(mousePosition);
 
             Physics.Raycast(startRay, out RaycastHit startHitInfo, 1000, m_floorLayer);
             Physics.Raycast(endRay, out RaycastHit endHitInfo, 1000, m_floorLayer);
 
-            var startPosition = startHitInfo.point;
-            var endPosition = endHitInfo.point;
+            var (center, radius) = GeometryHelper.GetSphere(startHitInfo.point, endHitInfo.point);
+            m_selectionCenter = center;
+            m_selectionDistance = radius;
 
-            var center = (startPosition + endPosition) / 2;
-            var halfsize = center * 0.5f;
+            var (center2D, size2D) = GeometryHelper.GetBox(m_selectionBoxStartPosition, mousePosition);
+            var searchAreaRect = new Rect(center2D, size2D);
 
-            var colliders = Physics.OverlapBox(center, halfsize);
-
+            var colliders = Physics.OverlapSphere( m_selectionCenter, radius);
+            int i = 0;
             foreach (var collider in colliders)
             {
                 if (collider.TryGetComponent(out IInteractableUnit controller))
                 {
-                    m_currentSelection.Add(controller);
+                    p1.position = collider.transform.position;
+                    var pos2D = m_mainCamera.WorldToScreenPoint(collider.transform.position);
+
+                    uiPoints[i++].position = pos2D;
+
+                    Debug.Log($"{searchAreaRect} {pos2D}");
+                    if (searchAreaRect.Contains(pos2D))
+                    {
+                        m_currentSelection.Add(controller);
+                        Debug.Log("     Ok");
+                    }
                 }
             }
         }
@@ -96,7 +128,14 @@ public class UnitInteractionManager : Singleton<UnitInteractionManager>
             }
         }
 
+        m_selectionBoxIsActive = false;
         m_currentSelection.ForEach(interactable => interactable.Select());
+    }
+
+    private void OnDrawGizmos()
+    {
+        Gizmos.color = Color.red;
+        Gizmos.DrawSphere(m_selectionCenter, m_selectionDistance);
     }
 
     private void HandleRightClickPressed(Vector2 mousePosition)
@@ -109,7 +148,18 @@ public class UnitInteractionManager : Singleton<UnitInteractionManager>
         {
             var targetPosition = hitInfo.point;
 
-            m_currentSelection.ForEach(interactable => interactable.MoveTo(targetPosition));
+            var locations = GroupMovementHelper.GetLocations(targetPosition, m_currentSelection.Count);
+            for (int i = 0; i < m_currentSelection.Count; i++)
+            {
+                m_currentSelection[i].MoveTo(locations[i]);
+            }
         }
+        /*
+        else if (Physics.Raycast(ray, out RaycastHit unitHitInfo, 1000, m_unitLayer))
+        {
+            if (unitHitInfo.collider.gameObject.TryGetComponent(out ))
+        }
+        */
     }
+
 }
