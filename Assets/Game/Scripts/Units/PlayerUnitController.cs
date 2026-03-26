@@ -1,6 +1,7 @@
 using UnityEngine;
 
-[RequireComponent(typeof(UnitMovementController), typeof(UnitAnimationController), typeof(UnitSelectionView))]
+[RequireComponent(typeof(UnitMovementController),typeof(UnitAnimationController),typeof(UnitSelectionView))]
+[RequireComponent(typeof(UnitCombatController))]
 public class PlayerUnitController : MonoBehaviour, IInteractableUnit
 {
     private Faction m_faction;
@@ -8,12 +9,14 @@ public class PlayerUnitController : MonoBehaviour, IInteractableUnit
     private UnitMovementController m_movementController;
     private UnitAnimationController m_animationController;
     private UnitSelectionView m_selectionView;
+    private UnitCombatController m_combatController;
 
     private void Awake()
     {
         m_selectionView = GetComponent<UnitSelectionView>();    
         m_movementController = GetComponent<UnitMovementController>();
         m_animationController = GetComponent<UnitAnimationController>();
+        m_combatController = GetComponent<UnitCombatController>();
 
         m_movementController.OnStartMove.AddListener(HandleStartMove);
         m_movementController.OnStopMove.AddListener(HandleStopMove);
@@ -54,5 +57,10 @@ public class PlayerUnitController : MonoBehaviour, IInteractableUnit
     private void HandleStopMove(UnitMovementController controller)
     {
         m_animationController.PlayIdleAnimation();
+    }
+
+    public void AttackUnit(ITargetableUnit unit)
+    {
+        m_combatController.AttackTarget(unit);
     }
 }

@@ -1,7 +1,7 @@
 using UnityEngine;
 using UnityEngine.EventSystems;
 
-public class DestroctableObjectController : MonoBehaviour, ITarget
+public class DestroctableObjectController : MonoBehaviour, ITargetableUnit
 {
     [SerializeField] private int _health = 70;
 

@@ -22,12 +22,6 @@ public class UnitInteractionManager : Singleton<UnitInteractionManager>
 
     private List<IInteractableUnit> m_currentSelection = new();
 
-    private Vector3 m_selectionCenter = Vector3.zero;
-    private float m_selectionDistance = 0f;
-
-    public Transform p1;
-    public Transform p2;
-
     private void Start()
     {
         InputManager.Instance.OnInputReceived += HandleInputReceived;
@@ -38,12 +32,6 @@ public class UnitInteractionManager : Singleton<UnitInteractionManager>
         if (m_selectionBoxIsActive)
         {
             var mousePosition = InputManager.Instance.MousePosition;
-
-
-            if (Physics.Raycast(m_mainCamera.ScreenPointToRay(mousePosition), out RaycastHit hitInfo, 1000, m_floorLayer))
-            {
-                p2.position = hitInfo.point;
-            }
 
             OnSelectionBoxChanged?.Invoke(m_selectionBoxStartPosition, mousePosition);
         }
@@ -64,15 +52,10 @@ public class UnitInteractionManager : Singleton<UnitInteractionManager>
     {
         m_selectionBoxStartPosition = mousePosition;
 
-        if (Physics.Raycast(m_mainCamera.ScreenPointToRay(mousePosition), out RaycastHit hitInfo, 1000, m_floorLayer))
-        {
-            p1.position = hitInfo.point;
-        }
-
         m_selectionBoxIsActive = true;
-    }
 
-    public List<RectTransform> uiPoints;
+        OnSelectionBoxStarted?.Invoke();
+    }
 
     private void HandleLeftClickReleased(Vector2 mousePosition)
     {
@@ -89,28 +72,18 @@ public class UnitInteractionManager : Singleton<UnitInteractionManager>
             Physics.Raycast(endRay, out RaycastHit endHitInfo, 1000, m_floorLayer);
 
             var (center, radius) = GeometryHelper.GetSphere(startHitInfo.point, endHitInfo.point);
-            m_selectionCenter = center;
-            m_selectionDistance = radius;
 
-            var (center2D, size2D) = GeometryHelper.GetBox(m_selectionBoxStartPosition, mousePosition);
-            var searchAreaRect = new Rect(center2D, size2D);
-
-            var colliders = Physics.OverlapSphere( m_selectionCenter, radius);
+            var colliders = Physics.OverlapSphere(center, radius);
             int i = 0;
             foreach (var collider in colliders)
             {
                 if (collider.TryGetComponent(out IInteractableUnit controller))
                 {
-                    p1.position = collider.transform.position;
                     var pos2D = m_mainCamera.WorldToScreenPoint(collider.transform.position);
-
-                    uiPoints[i++].position = pos2D;
-
-                    Debug.Log($"{searchAreaRect} {pos2D}");
-                    if (searchAreaRect.Contains(pos2D))
+                    
+                    if (GeometryHelper.IsPointInsideRect(m_selectionBoxStartPosition, mousePosition, pos2D))
                     {
                         m_currentSelection.Add(controller);
-                        Debug.Log("     Ok");
                     }
                 }
             }
@@ -130,13 +103,10 @@ public class UnitInteractionManager : Singleton<UnitInteractionManager>
 
         m_selectionBoxIsActive = false;
         m_currentSelection.ForEach(interactable => interactable.Select());
+
+        OnSelectionBoxEnded?.Invoke();
     }
 
-    private void OnDrawGizmos()
-    {
-        Gizmos.color = Color.red;
-        Gizmos.DrawSphere(m_selectionCenter, m_selectionDistance);
-    }
 
     private void HandleRightClickPressed(Vector2 mousePosition)
     {

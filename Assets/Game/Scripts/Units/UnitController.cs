@@ -3,7 +3,7 @@ using UnityEngine;
 using UnityEngine.EventSystems;
 
 [RequireComponent(typeof(Collider), typeof(Outline))]
-public class UnitController : MonoBehaviour, ITarget, IPointerClickHandler
+public class UnitController : MonoBehaviour, ITargetableUnit, IPointerClickHandler
 {
     [SerializeField] private float _health = 100f;
     [SerializeField] private float _attackRange = 0.5f;
@@ -18,7 +18,7 @@ public class UnitController : MonoBehaviour, ITarget, IPointerClickHandler
     [SerializeField] private string _takeDamageTriggerName = "TakeDamage";
     [SerializeField] private string _killTriggerName = "Kill";
 
-    private ITarget _currentTarget;
+    private ITargetableUnit _currentTarget;
     private Coroutine _attackCoroutine;
 
     private Outline _outline;
@@ -33,7 +33,7 @@ public class UnitController : MonoBehaviour, ITarget, IPointerClickHandler
         _outline.DisableOutline();
     }
 
-    public void AttackTarget(ITarget target)
+    public void AttackTarget(ITargetableUnit target)
     {
         _currentTarget = target;
 
@@ -59,7 +59,7 @@ public class UnitController : MonoBehaviour, ITarget, IPointerClickHandler
         }
     }
 
-    private async void Attack(ITarget target)
+    private async void Attack(ITargetableUnit target)
     {
         _animator.SetTrigger(_attackTriggerName);
 

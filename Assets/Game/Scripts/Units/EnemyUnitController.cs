@@ -1,16 +1,55 @@
 using UnityEngine;
 
-public class EnemyUnitController : MonoBehaviour
+[RequireComponent(typeof(UnitMovementController), typeof(UnitAnimationController))]
+public class EnemyUnitController : MonoBehaviour, IInteractableUnit, ITargetableUnit
 {
-    // Start is called once before the first execution of Update after the MonoBehaviour is created
-    void Start()
+    private UnitMovementController m_movementController;
+    private UnitAnimationController m_animationController;
+
+    private Faction m_faction;
+
+    public EnemyUnitController(UnitStats stats, Faction faction)
     {
-        
+
     }
 
-    // Update is called once per frame
-    void Update()
+    public void Attack(float damage)
     {
-        
+
+    }
+
+    public void AttackUnit(ITargetableUnit unit)
+    {
+
+    }
+
+    public void Deselect()
+    {
+
+    }
+
+    public Transform GetPositon()
+    {
+        return transform;
+    }
+
+    public bool IsAlive()
+    {
+        return true;
+    }
+
+    public bool IsTarget(Faction targetFaction)
+    {
+        return targetFaction != m_faction;
+    }
+
+    public void MoveTo(Vector3 position)
+    {
+        m_movementController.MoveTo(position);
+    }
+
+    public void Select()
+    {
+        throw new System.NotImplementedException();
     }
 }
