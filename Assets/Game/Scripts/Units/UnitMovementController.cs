@@ -11,6 +11,7 @@ public class UnitMovementController : MonoBehaviour
     [Header("Parameters")]
     [SerializeField] private float m_moveSpeed = 4f;
     [SerializeField] private float m_turnSpeed = 500f;
+    [SerializeField] private float m_lookToTargetDuration = 0.2f;
 
     [Header("Events")]
     public UnityEvent<UnitMovementController, Vector3> OnStartMove; 
@@ -18,18 +19,15 @@ public class UnitMovementController : MonoBehaviour
 
     private Coroutine m_movementAnimationCoroutine;
 
-    public void MoveTo(Vector3 targetPosition, float distanceThreshold=0.1f, Action callback=null)
+    public void MoveTo(Vector3 targetPosition, float distanceThreshold=0.1f, Action callback=null, bool notify=true)
     {
-        if (m_movementAnimationCoroutine != null)
-        {
-            StopCoroutine(m_movementAnimationCoroutine);
-        }
+        StopMovement(false);
 
-        m_movementAnimationCoroutine = StartCoroutine(AnimateMovementCoroutine(targetPosition, distanceThreshold, callback));
+        m_movementAnimationCoroutine = StartCoroutine(AnimateMovementCoroutine(targetPosition, distanceThreshold, callback, notify));
     }
 
 
-    public IEnumerator AnimateMovementCoroutine(Vector3 targetPosition, float distanceThreshold, Action callback)
+    public IEnumerator AnimateMovementCoroutine(Vector3 targetPosition, float distanceThreshold, Action callback, bool notify = true)
     {
         var distance = float.MaxValue;
         
@@ -50,17 +48,48 @@ public class UnitMovementController : MonoBehaviour
             distance = Vector3.Distance(m_root.position, targetPosition);
 
             yield return null;
+
         } while (distance > distanceThreshold);
 
-        //_root.position = targetPosition;
-
-        OnStopMove?.Invoke(this);
-
         callback?.Invoke();
+
+        StopMovement(notify);
+    }
+
+    public IEnumerator LookToTargetCoroutine(Transform root, Vector3 target, float duration)
+    {
+        var accumTime = 0f;
+
+        var startRotation = root.rotation;
+        var endRotation = Quaternion.LookRotation(target - root.position, Vector3.up);
+
+        while (accumTime < duration)
+        {
+            accumTime += Time.deltaTime;
+
+            root.rotation = Quaternion.Lerp(startRotation, endRotation, accumTime / duration);
+
+            yield return null;
+        }
     }
 
     public void SetSpeed(float speed)
     {
         m_moveSpeed = speed;
+    }
+
+    public void LookToTarget(Vector3 target)
+    {
+        StartCoroutine(LookToTargetCoroutine(transform, target, m_lookToTargetDuration));
+    }
+
+    public void StopMovement(bool notify)
+    {
+        if (m_movementAnimationCoroutine != null)
+        {
+            StopCoroutine(m_movementAnimationCoroutine);
+        }
+
+        if (notify) OnStopMove?.Invoke(this);
     }
 }

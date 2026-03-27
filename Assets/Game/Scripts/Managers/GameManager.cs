@@ -6,10 +6,18 @@ using UnityEngine;
 public class GameManager : MonoBehaviour
 {
     public Transform m_playerUnitsParent;
-    public List<EnemyUnitController> m_enemyUnits;
+    public Transform m_enemyUnitsParent;
+
+    public FactionSO m_playerFaction;
+    public FactionSO m_enemyFaction;
 
     private void Start()
     {
-        m_playerUnitsParent.GetComponentsInChildren<PlayerUnitController>().ToList().ForEach(unit => unit.Setup(new UnitStats(100, 15, 10, 4, 0.7f), new Faction("123", "Player")));
+        var playerStats = new UnitStats(100, 15, 10, 4, 1.4f, 1f);
+        m_playerUnitsParent.GetComponentsInChildren<BaseUnitController>().ToList().ForEach(unit => unit.Setup(playerStats, m_playerFaction));
+
+
+        var enemyStats = new UnitStats(100, 10, 5, 2, 1.4f, 1f);
+        m_enemyUnitsParent.GetComponentsInChildren<BaseUnitController>().ToList().ForEach(unit => unit.Setup(enemyStats, m_enemyFaction));
     }
 }

@@ -1,5 +1,6 @@
 using NUnit.Framework;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEditor.PackageManager;
 using UnityEngine;
 using UnityEngine.Events;
@@ -11,6 +12,7 @@ public class UnitInteractionManager : Singleton<UnitInteractionManager>
 
     [SerializeField] private LayerMask m_floorLayer;
     [SerializeField] private LayerMask m_unitLayer;
+    [SerializeField] private List<FactionSO> m_controlableFactions;
 
     [Header("Events")]
     public UnityEvent OnSelectionBoxStarted;
@@ -74,11 +76,13 @@ public class UnitInteractionManager : Singleton<UnitInteractionManager>
             var (center, radius) = GeometryHelper.GetSphere(startHitInfo.point, endHitInfo.point);
 
             var colliders = Physics.OverlapSphere(center, radius);
-            int i = 0;
+
             foreach (var collider in colliders)
             {
                 if (collider.TryGetComponent(out IInteractableUnit controller))
                 {
+                    if (!controller.IsActive()) continue;
+
                     var pos2D = m_mainCamera.WorldToScreenPoint(collider.transform.position);
                     
                     if (GeometryHelper.IsPointInsideRect(m_selectionBoxStartPosition, mousePosition, pos2D))
@@ -110,26 +114,39 @@ public class UnitInteractionManager : Singleton<UnitInteractionManager>
 
     private void HandleRightClickPressed(Vector2 mousePosition)
     {
+        var notAllyFactionUnits = m_currentSelection.Where(interactable => !m_controlableFactions.Contains(interactable.GetFaction())).ToList();
+
+        foreach (var unit in notAllyFactionUnits)
+        {
+            var index = m_currentSelection.IndexOf(unit);
+
+            m_currentSelection[index].Deselect();
+            m_currentSelection.RemoveAt(index);
+        }
+
         if (m_currentSelection.Count == 0) return;
 
         var ray = m_mainCamera.ScreenPointToRay(mousePosition);
 
-        if (Physics.Raycast(ray, out RaycastHit hitInfo, 1000, m_floorLayer))
+        // Check for Unit Target
+        if (Physics.Raycast(ray, out RaycastHit unitHitInfo, 1000, m_unitLayer))
+        {
+            if (unitHitInfo.collider.gameObject.TryGetComponent(out IInteractableUnit unit))
+            {
+                m_currentSelection.ForEach(selectedUnit => selectedUnit.HandleCommand(new UnitTargetCommand(unit)));
+            }
+        }// Check for Location
+        else if (Physics.Raycast(ray, out RaycastHit hitInfo, 1000, m_floorLayer))
         {
             var targetPosition = hitInfo.point;
 
             var locations = GroupMovementHelper.GetLocations(targetPosition, m_currentSelection.Count);
-            for (int i = 0; i < m_currentSelection.Count; i++)
+
+            for (int i = 0; locations.Count > i; i++)
             {
-                m_currentSelection[i].MoveTo(locations[i]);
+                m_currentSelection[i].HandleCommand(new LocationCommand(locations[i]));
             }
         }
-        /*
-        else if (Physics.Raycast(ray, out RaycastHit unitHitInfo, 1000, m_unitLayer))
-        {
-            if (unitHitInfo.collider.gameObject.TryGetComponent(out ))
-        }
-        */
     }
 
 }

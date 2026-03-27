@@ -4,5 +4,5 @@ public interface ITargetableUnit
 {
     Transform GetPositon();
     bool IsAlive();
-    void Attack(float damage);
+    void TakeDamage(ITargetableUnit source, float damage);
 }

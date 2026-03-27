@@ -2,9 +2,9 @@ using UnityEngine;
 
 public interface IInteractableUnit
 {
-    void AttackUnit(ITargetableUnit unit);
+    FactionSO GetFaction();
+    bool IsActive();
     void Select();
     void Deselect();
-    void MoveTo(Vector3 position);
-    bool IsTarget(Faction targetFaction);
+    void HandleCommand(UnitCommand command);
 }
