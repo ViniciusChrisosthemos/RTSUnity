@@ -1,0 +1,25 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7891b1113112f0d4383344ca3aa2ef22, type: 3}
+  m_Name: Unit_Worker
+  m_EditorClassIdentifier: 
+  m_id: worker
+  m_name: Worker
+  m_icon: {fileID: 21300000, guid: 2c5b45d1ae6580d4fb9075f62db5a5f5, type: 3}
+  m_timeToCreate: 15
+  m_baseHealth: 50
+  m_baseMoveSpeed: 2
+  m_basePower: 0
+  m_baseDefense: 10
+  m_baseAttackSpeed: 0
+  m_baseRange: 0
+  m_actionsBeforeDie: 3

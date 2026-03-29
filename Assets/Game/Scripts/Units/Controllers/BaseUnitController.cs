@@ -3,7 +3,7 @@ using UnityEditor;
 using UnityEngine;
 
 [RequireComponent(typeof(UnitMovementController), typeof(UnitSelectionView), typeof(UnitAnimationController))]
-public abstract class BaseUnitController : MonoBehaviour, IInteractableUnit, ITargetableUnit
+public abstract class BaseUnitController : MonoBehaviour, IInteractable, ITargetableUnit
 {
     [SerializeField] private HealthBarView m_healthBarView;
 

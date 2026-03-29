@@ -28,7 +28,7 @@ public class CombatUnitController : BaseUnitController
         }
     }
 
-    private void HandleTargetCommand(IInteractableUnit unit)
+    private void HandleTargetCommand(IInteractable unit)
     {
         if (unit.GetFaction() == GetFaction()) return;
 

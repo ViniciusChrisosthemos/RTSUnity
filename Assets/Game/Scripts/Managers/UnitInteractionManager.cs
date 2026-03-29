@@ -1,10 +1,7 @@
-using NUnit.Framework;
 using System.Collections.Generic;
 using System.Linq;
-using UnityEditor.PackageManager;
 using UnityEngine;
 using UnityEngine.Events;
-using UnityEngine.InputSystem;
 
 public class UnitInteractionManager : Singleton<UnitInteractionManager>
 {
@@ -12,17 +9,19 @@ public class UnitInteractionManager : Singleton<UnitInteractionManager>
 
     [SerializeField] private LayerMask m_floorLayer;
     [SerializeField] private LayerMask m_unitLayer;
+    [SerializeField] private LayerMask m_structureLayer;
     [SerializeField] private List<FactionSO> m_controlableFactions;
 
     [Header("Events")]
     public UnityEvent OnSelectionBoxStarted;
     public UnityEvent OnSelectionBoxEnded;
     public UnityEvent<Vector2, Vector2> OnSelectionBoxChanged;
+    public UnityEvent<List<IInteractable>> OnItemsSelected;
 
     private bool m_selectionBoxIsActive = false;
     private Vector2 m_selectionBoxStartPosition;
 
-    private List<IInteractableUnit> m_currentSelection = new();
+    private List<IInteractable> m_currentSelection = new();
 
     private void Start()
     {
@@ -64,7 +63,6 @@ public class UnitInteractionManager : Singleton<UnitInteractionManager>
         m_currentSelection.ForEach(interactable => interactable.Deselect());
         m_currentSelection.Clear();
 
-
         if (Vector3.Distance(m_selectionBoxStartPosition, mousePosition) >= 0.1)
         {
             Ray startRay = m_mainCamera.ScreenPointToRay(m_selectionBoxStartPosition);
@@ -79,7 +77,7 @@ public class UnitInteractionManager : Singleton<UnitInteractionManager>
 
             foreach (var collider in colliders)
             {
-                if (collider.TryGetComponent(out IInteractableUnit controller))
+                if (collider.TryGetComponent(out IInteractable controller))
                 {
                     if (!controller.IsActive()) continue;
 
@@ -94,11 +92,12 @@ public class UnitInteractionManager : Singleton<UnitInteractionManager>
         }
         else
         {
+            RaycastHit hit;
             Ray ray = m_mainCamera.ScreenPointToRay(mousePosition);
 
-            if (Physics.Raycast(ray, out RaycastHit startHitInfo, 1000, m_unitLayer))
+            if (Physics.Raycast(ray, out hit, 1000))
             {
-                if (startHitInfo.collider.gameObject.TryGetComponent(out IInteractableUnit interactable))
+                if (hit.collider.gameObject.TryGetComponent(out IInteractable interactable))
                 {
                     m_currentSelection.Add(interactable);
                 }
@@ -109,8 +108,8 @@ public class UnitInteractionManager : Singleton<UnitInteractionManager>
         m_currentSelection.ForEach(interactable => interactable.Select());
 
         OnSelectionBoxEnded?.Invoke();
+        OnItemsSelected?.Invoke(m_currentSelection);
     }
-
 
     private void HandleRightClickPressed(Vector2 mousePosition)
     {
@@ -131,7 +130,7 @@ public class UnitInteractionManager : Singleton<UnitInteractionManager>
         // Check for Unit Target
         if (Physics.Raycast(ray, out RaycastHit unitHitInfo, 1000, m_unitLayer))
         {
-            if (unitHitInfo.collider.gameObject.TryGetComponent(out IInteractableUnit unit))
+            if (unitHitInfo.collider.gameObject.TryGetComponent(out IInteractable unit))
             {
                 m_currentSelection.ForEach(selectedUnit => selectedUnit.HandleCommand(new UnitTargetCommand(unit)));
             }

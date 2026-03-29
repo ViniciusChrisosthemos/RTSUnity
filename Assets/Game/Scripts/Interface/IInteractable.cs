@@ -1,6 +1,6 @@
 using UnityEngine;
 
-public interface IInteractableUnit
+public interface IInteractable
 {
     FactionSO GetFaction();
     bool IsActive();

@@ -2,9 +2,9 @@ using UnityEngine;
 
 public class UnitTargetCommand : UnitCommand
 {
-    public IInteractableUnit Target {  get; private set; }
+    public IInteractable Target {  get; private set; }
 
-    public UnitTargetCommand(IInteractableUnit target)
+    public UnitTargetCommand(IInteractable target)
     {
         Target = target;
     }

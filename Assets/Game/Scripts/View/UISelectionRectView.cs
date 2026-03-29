@@ -1,6 +1,6 @@
 using UnityEngine;
 
-public class UIUnitInteractionView : MonoBehaviour
+public class UISelectionRectView : MonoBehaviour
 {
     [SerializeField] private UnitInteractionManager m_unitInteractionManager;
 
